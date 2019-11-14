@@ -7,6 +7,7 @@
   loop:
     - git
     - apt-transport-https
+    - nginx
 
 - name: check out master branch
   git:
@@ -78,15 +79,16 @@
     src: env.j2
     dest: /srv/monicahq/.env
 
-# Run php artisan key:generate to generate an application key. This will set APP_KEY with the right value automatically.
-# Run php artisan setup:production -v
-
 - name: Run an initial key generation
-  shell: "/usr/bin/php /srv/monicahq/artisan key:generate"
+  command: "/usr/bin/php /srv/monicahq/artisan key:generate"
+  args:
+    chdir: /srv/monicahq/
   tags: molecule-notest
 
 - name: Run an initial migration
-  shell: "/usr/bin/php /srv/monicahq/artisan setup:production --force"
+  command: "/usr/bin/php /srv/monicahq/artisan setup:production --force"
+  args:
+    chdir: /srv/monicahq/
   tags: molecule-notest
 
 - name: Place a scheduler cron job
@@ -94,3 +96,31 @@
     user: monicahq
     name: "scheduler"
     job: "/usr/bin/php /srv/monicahq/artisan schedule:run"
+
+- name: Recursively change ownership of a directory
+  file:
+    path: /srv/monicahq
+    state: directory
+    recurse: yes
+    owner: monicahq
+    group: www-data
+
+- name: Put right permissions to storage
+  file:
+    path: /srv/monicahq/storage
+    state: directory
+    recurse: yes
+    mode: g+w
+- name: Create nginx vhost config
+  template:
+    src: monicahq.conf.j2
+    dest: /etc/nginx/sites-enabled/monica.conf
+- name: Remove default nginx configuration
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+- name: reload service nginx
+  become: true
+  systemd:
+    name: nginx
+    state: reloaded
