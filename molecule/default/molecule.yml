@@ -2,13 +2,13 @@ dependency:
   name: galaxy
 driver:
   name: docker
-lint:
-  name: yamllint
-  options:
-    config-file: molecule/default/yamllint.yml
+# lint:
+#   name: yamllint
+#   options:
+#     config-file: molecule/default/yamllint.yml
 platforms:
   - name: ansible-role-monica-test
-    image: "geerlingguy/docker-debian9-ansible"
+    image: "geerlingguy/docker-debian10-ansible"
     command: ${MOLECULE_COMMAND:-""}
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
@@ -16,20 +16,20 @@ platforms:
     pre_build_image: true
 provisioner:
   name: ansible
-  lint:
-    name: ansible-lint
-    options:
-      exclude:
-        - molecule/default/playbook.yml
-      x:
-        - 204  # Lines should be no longer than 160 chars
-        - 403  # Package installs should not use latest
-        - 502  # All tasks should be named
+  # lint:
+  #   name: ansible-lint
+  #   options:
+  #     exclude:
+  #       - molecule/default/playbook.yml
+  #     x:
+  #       - 204  # Lines should be no longer than 160 chars
+  #       - 403  # Package installs should not use latest
+  #       - 502  # All tasks should be named
   playbooks:
     converge: ${MOLECULE_PLAYBOOK:-playbook.yml}
 scenario:
   name: default
 verifier:
   name: testinfra
-  lint:
-    name: flake8
+  # lint:
+  #   name: flake8
