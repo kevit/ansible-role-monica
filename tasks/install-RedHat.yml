@@ -32,77 +32,69 @@
 
 - name: install php 
   yum:
-    name: php74
+    enablerepo: "remi,remi-php74"
+    name: php
     state: present
 
 - name: install php-fpm 
   yum:
-    name: php74-php-fpm
+    enablerepo: "remi,remi-php74"
+    name: php-fpm
     state: present
 
 - name: install php modules
   yum:
+    enablerepo: "remi,remi-php74"
     name:
-      - php74-php-gd
-      - php74-php-intl
-      - php74-php-ldap
-      - php74-php-iconv
-      - php74-php-mcrypt
-      - php74-php-mysql
-      - php74-php-opcache
-      - php74-php-pdo
-      - php74-php-pdo_dblib
-      - php74-php-pear
-      - php74-php-pecl-igbinary
-      - php74-php-process
-      - php74-php-pspell
-      - php74-php-soap
-      - php74-php-pecl-memcache
-      - php74-php-xml
-      - php74-php-zip
-      - php74-php-gmp
+      - php-gd
+      - php-intl
+      - php-ldap
+      - php-iconv
+      - php-mcrypt
+      - php-mysql
+      - php-opcache
+      - php-pdo
+      - php-pdo_dblib
+      - php-pear
+      - php-pecl-igbinary
+      - php-process
+      - php-pspell
+      - php-soap
+      - php-pecl-memcache
+      - php-xml
+      - php-zip
+      - php-gmp
+      - php-bcmath
+      - php-redis
     state: present
 
 
-# - name: install php dependencies
-#   yum:
-#     name: "{{ item }}"
-#     state: present
-#     update_cache: yes
-#   loop:
-#     # - php7.3
-#     - php7.3-cli
-#     - php7.3-intl
-#     - php7.3-iconv
-#     - php7.3-fpm
-#     - php7.3-curl
-#     - php7.3-gd
-#     - php7.3-mysql
-#     - php7.3-mysqli
-#     - php7.3-opcache
-#     - php7.3-json
-#     - php7.3-mbstring
-#     - php7.3-soap
-#     - php7.3-xml
-#     - php7.3-zip
-#     - php7.3-gmp
-#     - php7.3-bcmath
-#     - php-memcached
-#     - php-xdebug
-#     - php-redis
 
-- name: reload service php-fpm
-  become: true
-  service:
-    name: php74-php-fpm
-    state: reloaded
-    enabled: true
+# - name: reload service php-fpm
+#   become: true
+#   service:
+#     name: php74-php-fpm
+#     state: reloaded
+#     enabled: true
+- name: add group www-data
+  group: name=www-data state=present
+  
+- name: Recursively change ownership of a directory
+  file:
+    path: /srv/monicahq
+    state: directory
+    recurse: yes
+    owner: monicahq
+    group: www-data
 
 - name: install composer
   include_role:
     name: geerlingguy.composer
 
 - name: install composer dependencies
+  # become_user: monicahq
+  environment: 
+    COMPOSER_ALLOW_SUPERUSER: 1
   composer:
     command: install
     working_dir: /srv/monicahq
@@ -129,13 +121,7 @@
     name: "scheduler"
     job: "/usr/bin/php /srv/monicahq/artisan schedule:run"
 
-- name: Recursively change ownership of a directory
-  file:
-    path: /srv/monicahq
-    state: directory
-    recurse: yes
-    owner: monicahq
-    group: www-data
+
 
 - name: Put right permissions to storage
   file:

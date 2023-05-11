@@ -72,7 +72,9 @@
     name: geerlingguy.composer
 
 - name: install composer dependencies
-  become_user: monicahq
+  # become_user: monicahq
+  environment: 
+    COMPOSER_ALLOW_SUPERUSER: 1
   composer:
     command: install
     working_dir: /srv/monicahq
