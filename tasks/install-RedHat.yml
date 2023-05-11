@@ -9,6 +9,7 @@
     - varnish
     - nginx
     - yum-utils
+    - cronie
 
 - name: check out master branch
   git:
@@ -78,7 +79,7 @@
 #     enabled: true
 - name: add group www-data
   group: name=www-data state=present
-  
+
 - name: Recursively change ownership of a directory
   file:
     path: /srv/monicahq

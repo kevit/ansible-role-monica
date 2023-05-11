@@ -9,6 +9,7 @@
     - apt-transport-https
     - nginx
     - gpg
+    - cron
 
 - name: check out master branch
   git:
