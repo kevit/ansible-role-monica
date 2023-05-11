@@ -1,0 +1,145 @@
+---
+- name: install packages
+  yum:
+    name: "{{ item }}"
+    state: present
+    # update_cache: yes
+  loop:
+    - git
+    - varnish
+    - nginx
+    - yum-utils
+    - cronie
+
+- name: check out master branch
+  git:
+    repo: 'https://github.com/monicahq/monica.git'
+    dest: /srv/monicahq
+    version: v3.6.0
+
+- name: Add the user
+  user:
+    name: monicahq
+    shell: /usr/bin/nologin
+    home: /srv/monicahq
+
+
+
+- name: add remi repo
+  yum:
+    name: https://rpms.remirepo.net/enterprise/remi-release-7.rpm
+    disable_gpg_check: true
+    state: present
+
+- name: install php 
+  yum:
+    enablerepo: "remi,remi-php74"
+    name: php
+    state: present
+
+- name: install php-fpm 
+  yum:
+    enablerepo: "remi,remi-php74"
+    name: php-fpm
+    state: present
+
+- name: install php modules
+  yum:
+    enablerepo: "remi,remi-php74"
+    name:
+      - php-gd
+      - php-intl
+      - php-ldap
+      - php-iconv
+      - php-mcrypt
+      - php-mysql
+      - php-opcache
+      - php-pdo
+      - php-pdo_dblib
+      - php-pear
+      - php-pecl-igbinary
+      - php-process
+      - php-pspell
+      - php-soap
+      - php-pecl-memcache
+      - php-xml
+      - php-zip
+      - php-gmp
+      - php-bcmath
+      - php-redis
+    state: present
+
+
+
+# - name: reload service php-fpm
+#   become: true
+#   service:
+#     name: php74-php-fpm
+#     state: reloaded
+#     enabled: true
+- name: add group www-data
+  group: name=www-data state=present
+
+- name: Recursively change ownership of a directory
+  file:
+    path: /srv/monicahq
+    state: directory
+    recurse: yes
+    owner: monicahq
+    group: www-data
+
+- name: install composer
+  include_role:
+    name: geerlingguy.composer
+
+- name: install composer dependencies
+  # become_user: monicahq
+  environment: 
+    COMPOSER_ALLOW_SUPERUSER: 1
+  composer:
+    command: install
+    working_dir: /srv/monicahq
+- name: prepare configuration
+  template:
+    src: env.j2
+    dest: /srv/monicahq/.env
+
+- name: Run an initial key generation
+  command: "/usr/bin/php /srv/monicahq/artisan key:generate"
+  args:
+    chdir: /srv/monicahq/
+  tags: molecule-notest
+
+- name: Run an initial migration
+  command: "/usr/bin/php /srv/monicahq/artisan setup:production --force"
+  args:
+    chdir: /srv/monicahq/
+  tags: molecule-notest
+
+- name: Place a scheduler cron job
+  cron:
+    user: monicahq
+    name: "scheduler"
+    job: "/usr/bin/php /srv/monicahq/artisan schedule:run"
+
+
+
+- name: Put right permissions to storage
+  file:
+    path: /srv/monicahq/storage
+    state: directory
+    recurse: yes
+    mode: g+w
+- name: Create nginx vhost config
+  template:
+    src: monicahq.conf.j2
+    dest: /etc/nginx/sites-enabled/monica.conf
+- name: Remove default nginx configuration
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+- name: reload service nginx
+  become: true
+  systemd:
+    name: nginx
+    state: reloaded
