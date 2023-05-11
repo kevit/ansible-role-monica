@@ -14,7 +14,7 @@
   git:
     repo: 'https://github.com/monicahq/monica.git'
     dest: /srv/monicahq
-    # version: master
+    version: v3.6.0
 
 - name: Add the user
   user:
@@ -22,17 +22,7 @@
     shell: /usr/bin/nologin
     home: /srv/monicahq
 
-# - name: Install sury key
-#   yum_key:
-#     url: 'https://packages.sury.org/php/apt.gpg'
-#     state: present
 
-# - name: Add sury repositories
-#   yum_repository:
-#     repo: "deb https://packages.sury.org/php/ stretch main"
-#     state: present
-#     update_cache: yes
-#     filename: 'sury'
 
 - name: add remi repo
   yum:
@@ -42,35 +32,35 @@
 
 - name: install php 
   yum:
-    name: php73
+    name: php74
     state: present
 
 - name: install php-fpm 
   yum:
-    name: php73-php-fpm
+    name: php74-php-fpm
     state: present
 
 - name: install php modules
   yum:
     name:
-      - php73-php-gd
-      - php73-php-intl
-      - php73-php-ldap
-      - php73-php-iconv
-      - php73-php-mcrypt
-      - php73-php-mysql
-      - php73-php-opcache
-      - php73-php-pdo
-      - php73-php-pdo_dblib
-      - php73-php-pear
-      - php73-php-pecl-igbinary
-      - php73-php-process
-      - php73-php-pspell
-      - php73-php-soap
-      - php73-php-pecl-memcache
-      - php73-php-xml
-      - php73-php-zip
-      - php73-php-gmp
+      - php74-php-gd
+      - php74-php-intl
+      - php74-php-ldap
+      - php74-php-iconv
+      - php74-php-mcrypt
+      - php74-php-mysql
+      - php74-php-opcache
+      - php74-php-pdo
+      - php74-php-pdo_dblib
+      - php74-php-pear
+      - php74-php-pecl-igbinary
+      - php74-php-process
+      - php74-php-pspell
+      - php74-php-soap
+      - php74-php-pecl-memcache
+      - php74-php-xml
+      - php74-php-zip
+      - php74-php-gmp
     state: present
 
 
@@ -103,9 +93,10 @@
 
 - name: reload service php-fpm
   become: true
-  systemd:
-    name: php72-php-fpm
+  service:
+    name: php74-php-fpm
     state: reloaded
+    enabled: true
 
 - name: install composer
   include_role:
