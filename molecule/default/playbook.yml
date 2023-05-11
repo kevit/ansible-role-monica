@@ -5,7 +5,7 @@
     - debug:
         msg: >-
           Testing with Ansible {{ ansible_version.full }} using Python {{ ansible_facts.python_version }}
-          on {{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }}
+          on {{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }} family {{ ansible_facts.os_family }}
 
     - import_role:
         name: ansible-role-monica
