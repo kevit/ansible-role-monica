@@ -1,0 +1,47 @@
+- name: install packages
+  apt:
+    name:
+    - git
+    - apt-transport-https
+    - nginx
+    - gnupg
+    - cron
+    state: present
+    update_cache: yes
+
+- name: Install sury key
+  apt_key:
+    url: 'https://packages.sury.org/php/apt.gpg'
+    state: present
+
+- name: Add sury repositories
+  apt_repository:
+    repo: "deb https://packages.sury.org/php/ bullseye main"
+    state: present
+    update_cache: yes
+    filename: 'sury'
+
+- name: install php dependencies
+  apt:
+    name:
+    - 'php{{ php_version }}'
+    - 'php{{ php_version }}-cli'
+    - 'php{{ php_version }}-intl'
+    - 'php{{ php_version }}-iconv'
+    - 'php{{ php_version }}-fpm'
+    - 'php{{ php_version }}-curl'
+    - 'php{{ php_version }}-gd'
+    - 'php{{ php_version }}-mysql'
+    - 'php{{ php_version }}-mysqli'
+    - 'php{{ php_version }}-opcache'
+    - 'php{{ php_version }}-mbstring'
+    - 'php{{ php_version }}-soap'
+    - 'php{{ php_version }}-xml'
+    - 'php{{ php_version }}-zip'
+    - 'php{{ php_version }}-gmp'
+    - 'php{{ php_version }}-bcmath'
+    - php-memcached
+    - php-xdebug
+    - php-redis
+    state: present
+    update_cache: yes

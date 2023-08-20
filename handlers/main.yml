@@ -1,0 +1,12 @@
+- name: reload service php-fcgi
+  become: true
+  systemd:
+    name: '{{ php_fcgi_service_name }}'
+    state: reloaded
+
+- name: reload service nginx
+  become: true
+  systemd:
+    name: nginx
+    state: reloaded
+  changed_when: false

@@ -1,0 +1,41 @@
+- name: install packages
+  dnf:
+    name:
+    - git
+    - nginx
+    - cronie
+    update_cache: yes
+
+- name: Import remi GPG key.
+  rpm_key:
+    key: https://rpms.remirepo.net/RPM-GPG-KEY-remi2022
+
+- name: Install remi repo.
+  dnf:
+    name: 'https://rpms.remirepo.net/fedora/remi-release-{{ ansible_distribution_major_version }}.rpm'
+
+- name: install php dependencies
+  dnf:
+    enablerepo: remi
+    name:
+    - '@php:remi-{{ php_version }}'
+    - php-cli
+    - php-intl
+    - php-iconv
+    - php-fpm
+    - php-curl
+    - php-gd
+    - php-mysql
+    - php-mysqli
+    - php-opcache
+    - php-mbstring
+    - php-soap
+    - php-xml
+    - php-zip
+    - php-gmp
+    - php-bcmath
+    - php-sodium
+    - php-memcached
+    - php-xdebug
+    - php-redis
+    update_cache: yes

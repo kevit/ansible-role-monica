@@ -1,91 +1,58 @@
 ---
-- name: install packages
-  apt:
-    name:
-    - git
-    - apt-transport-https
-    - nginx
-    - gnupg
-    - cron
-    state: present
-    update_cache: yes
-  loop:
+- name: Include os specific tasks
+  include_tasks: '{{ ansible_os_family | lower }}.yml'
 
-- name: check out master branch
-  git:
-    repo: 'https://github.com/monicahq/monica'
-    dest: /srv/monicahq
-    version: main
+- name: Include os specific vars
+  include_vars: '{{ ansible_os_family | lower }}.yml'
 
 - name: Add the user
   user:
     name: monicahq
     shell: /usr/bin/nologin
-    home: /srv/monicahq
+    home: /home/monicahq
 
-- name: Install sury key
-  apt_key:
-    url: 'https://packages.sury.org/php/apt.gpg'
-    state: present
+- name: Ensure folder id exist
+  file:
+    path: /srv/monicahq
+    state: directory
+    owner: monicahq
+    group: '{{ php_group }}'
 
-- name: Add sury repositories
-  apt_repository:
-    repo: "deb https://packages.sury.org/php/ bullseye main"
-    state: present
-    update_cache: yes
-    filename: 'sury'
-
-- name: install php dependencies
-  apt:
-    name: "{{ item }}"
-    state: present
-    update_cache: yes
-  loop:
-    - php8.2
-    - php8.2-cli
-    - php8.2-intl
-    - php8.2-iconv
-    - php8.2-fpm
-    - php8.2-curl
-    - php8.2-gd
-    - php8.2-mysql
-    - php8.2-mysqli
-    - php8.2-opcache
-    - php8.2-mbstring
-    - php8.2-soap
-    - php8.2-xml
-    - php8.2-zip
-    - php8.2-gmp
-    - php8.2-bcmath
-    - php-memcached
-    - php-xdebug
-    - php-redis
-
-- name: reload service php-fcgi
-  become: true
-  systemd:
-    name: php8.2-fpm
-    state: reloaded
-  changed_when: false
+- name: check out master branch
+  become_user: monicahq
+  git:
+    repo: 'https://github.com/monicahq/monica'
+    dest: /srv/monicahq
+    version: main
+  notify:
+    - reload service php-fcgi
 
 - name: install composer
   include_role:
     name: geerlingguy.composer
 
 - name: install composer dependencies
+  become_user: monicahq
   composer:
     command: install
     working_dir: /srv/monicahq
+  notify:
+    - reload service php-fcgi
+
 - name: prepare configuration
   template:
     src: env.j2
     dest: /srv/monicahq/.env
+  notify:
+    - reload service php-fcgi
 
 - name: Run an initial key generation
   command: "/usr/bin/php /srv/monicahq/artisan key:generate"
   args:
     chdir: /srv/monicahq/
   tags: molecule-notest
+  notify:
+    - reload service php-fcgi
 
 - name: Run an initial migration
   command: "/usr/bin/php /srv/monicahq/artisan setup:production --force"
@@ -105,7 +72,7 @@
     state: directory
     recurse: yes
     owner: monicahq
-    group: www-data
+    group: '{{ php_group }}'
   changed_when: false
 
 - name: Put right permissions to storage
@@ -114,17 +81,17 @@
     state: directory
     recurse: yes
     mode: g+w
+
 - name: Create nginx vhost config
   template:
     src: monicahq.conf.j2
-    dest: /etc/nginx/sites-enabled/monica.conf
+    dest: '{{ nginx_conf_dir }}/monica.conf'
+  notify:
+    - reload service nginx
+
 - name: Remove default nginx configuration
   file:
-    path: /etc/nginx/sites-enabled/default
+    path: '{{ nginx_conf_dir }}/default'
     state: absent
-- name: reload service nginx
-  become: true
-  systemd:
-    name: nginx
-    state: reloaded
-  changed_when: false
+  notify:
+    - reload service nginx

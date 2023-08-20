@@ -1,0 +1,4 @@
+php_fcgi_service_name: php-fpm
+php_group: apache
+
+nginx_conf_dir: /etc/nginx/conf.d
