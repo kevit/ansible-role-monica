@@ -10,9 +10,9 @@ galaxy_info:
     - name: EL
       versions:
         - 7
-    - name: redhat
+    - name: fedora
       versions:
-        - 8
+        - 36
 
   galaxy_tags:
     - system
