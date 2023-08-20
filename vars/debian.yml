@@ -1,0 +1,4 @@
+php_fcgi_service_name: php{{ php_version }}-fpm
+php_group: www-data
+
+nginx_conf_dir: /etc/nginx/sites-enabled
